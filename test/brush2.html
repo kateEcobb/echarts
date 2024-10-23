@@ -130,6 +130,17 @@ under the License.
             </div>
         </div>
 
+        <div class="split">Line</div>
+        <div class="block">
+            <div id="main3" class="main"></div>
+            <div class="panel">
+                <ul class="panel-desc">
+                    <li><strong>CHECK</strong>: brush an area and drag dataZoom.</li>
+                </ul>
+                <div id="panel3"></div>
+            </div>
+        </div>
+
 
 
 
@@ -181,9 +192,9 @@ under the License.
                 var values = [];
                 var volumns = [];
                 for (var i = 0; i < rawData.length; i++) {
-                    categoryData.push(rawData[i].splice(0, 1)[0]);
-                    values.push(rawData[i])
-                    volumns.push(rawData[i][4]);
+                    categoryData.push(rawData[i].slice(0, 1)[0]);
+                    values.push(rawData[i].slice(1))
+                    volumns.push(rawData[i].slice(1)[4]);
                 }
                 return {
                     categoryData: categoryData,
@@ -531,6 +542,190 @@ under the License.
                 });
 
             });
+        </script>
+
+
+        <!-- =================== 3 ===================== -->
+
+        <script>
+            var chart3;
+            var data3;
+            var panel3;
+
+            require([
+                'echarts',
+                'data/stock-DJI.json.js'
+            ], function (echarts, rawData) {
+
+                chart3 = echarts.init(document.getElementById('main3'), null, {
+
+                });
+                panel3 = document.getElementById('panel3');
+                data3 = splitData(rawData);
+
+                update3();
+
+                chart3.on('click', function (info) {
+                    if (info.data && info.componentType === 'series') {
+                        alert([
+                            'clicked on: ',
+                            'DATA: ' + info.name,
+                            'OPEN: ' + info.data[0],
+                            'CLOSE: ' + info.data[1],
+                            'LOWEST: ' + info.data[2],
+                            'HIGHEST: ' + info.data[3],
+
+                        ].join('\n'));
+                    }
+                });
+            })
+
+            function update3() {
+
+                chart3.setOption({
+                    backgroundColor: '#eee',
+                    animation: false,
+                    legend: {
+                        left: 0,
+                        data: ['MA5', 'MA10', 'MA20', 'MA30']
+                    },
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: {
+                            type: 'line'
+                        }
+                    },
+                    toolbox: {
+                        feature: {
+                            dataZoom: {
+                                yAxisIndex: false
+                            },
+                            brush: {
+                                type: ['polygon', 'rect', 'lineX', 'lineY', 'keep', 'clear']
+                            }
+                        }
+                    },
+                    brush: {
+                        xAxisIndex: 0,
+
+                        outOfBrush: {
+                            colorAlpha: 0.1
+                        }
+                    },
+                    grid:
+                    {
+                        left: '10%',
+                        right: '10%',
+                        height: 300
+                    },
+
+
+                    xAxis: {
+                        type: 'category',
+                        data: data3.categoryData,
+                        scale: true,
+                        boundaryGap: false,
+                        axisLine: { onZero: false },
+                        splitLine: { show: false },
+                        splitNumber: 20,
+                        min: 'dataMin',
+                        max: 'dataMax'
+                    },
+                    yAxis: {
+                        scale: true,
+                        splitArea: {
+                            show: true
+                        }
+                    },
+
+
+                    dataZoom: {
+                        type: 'inside',
+                        xAxisIndex: 0,
+                        start: 98,
+                        end: 100
+                    },
+
+
+                    series: [
+
+                        {
+                            name: 'MA5',
+                            type: 'line',
+                            data: calculateMA(5, data3),
+                            smooth: true,
+                            lineStyle: {
+                                normal: { opacity: 0.5 }
+                            }
+                        },
+                        {
+                            name: 'MA10',
+                            type: 'line',
+                            data: calculateMA(10, data3),
+                            smooth: true,
+                            lineStyle: {
+                                normal: { opacity: 0.5 }
+                            }
+                        },
+                        {
+                            name: 'MA20',
+                            type: 'line',
+                            data: calculateMA(20, data3),
+                            smooth: true,
+                            lineStyle: {
+                                normal: { opacity: 0.5 }
+                            }
+                        },
+                        {
+                            name: 'MA30',
+                            type: 'line',
+                            data: calculateMA(30, data3),
+                            smooth: true,
+                            lineStyle: {
+                                normal: { opacity: 0.5 }
+                            }
+                        },
+
+                    ]
+                });
+
+                chart3.on('brushSelected', renderBrushed3);
+
+                function renderBrushed3(params) {
+                    var sum = 0;
+                    var min = Infinity;
+                    var max = -Infinity;
+                    var countBySeries = [];
+                    var brushComponent = params.batch[0];
+
+                    var rawIndices = brushComponent.selected[0].dataIndex;
+                    for (var i = 0; i < rawIndices.length; i++) {
+                        var val = data3.values[rawIndices[i]][1];
+                        sum += val;
+                        min = Math.min(val, min);
+                        max = Math.max(val, max);
+                    }
+
+                    panel3.innerHTML = [
+                        '<h3>STATISTICS:</h3>',
+                        'SUM of open: ' + (sum / rawIndices.length).toFixed(4) + '<br>',
+                        'MIN of open: ' + min.toFixed(4) + '<br>',
+                        'MAX of open: ' + max.toFixed(4) + '<br>'
+                    ].join(' ');
+
+                }
+
+                chart3.dispatchAction({
+                    type: 'brush',
+                    areas: [
+                        {
+                            brushType: 'lineX',
+                            coordRange: ['2016-06-02', '2016-06-20'],
+                            xAxisIndex: 0
+                        }
+                    ]
+                });
+            }
         </script>
 
 
